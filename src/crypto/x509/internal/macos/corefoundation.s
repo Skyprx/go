@@ -2,9 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build darwin,amd64
+//go:build darwin && !ios
+// +build darwin,!ios
 
 #include "textflag.h"
+
+// The trampolines are ABIInternal as they are address-taken in
+// Go code.
 
 TEXT ·x509_CFArrayGetCount_trampoline(SB),NOSPLIT,$0-0
 	JMP	x509_CFArrayGetCount(SB)

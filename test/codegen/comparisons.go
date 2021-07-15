@@ -90,9 +90,11 @@ func CompareArray6(a, b unsafe.Pointer) bool {
 
 // Test that LEAQ/ADDQconst are folded into SETx ops
 
-func CmpFold(x uint32) bool {
-	// amd64:`SETHI\t.*\(SP\)`
-	return x > 4
+var r bool
+
+func CmpFold(x uint32) {
+	// amd64:`SETHI\t.*\(SB\)`
+	r = x > 4
 }
 
 // Test that direct comparisons with memory are generated when
@@ -404,6 +406,135 @@ func CmpToZero_ex5(e, f int32, u uint32) int {
 	// arm:`CMP`,-`SUB`,`(BMI|BPL)`
 	if f-int32(u>>2) >= 0 {
 		return 2
+	}
+	return 0
+}
+func UintLtZero(a uint8, b uint16, c uint32, d uint64) int {
+	// amd64: -`(TESTB|TESTW|TESTL|TESTQ|JCC|JCS)`
+	// arm64: -`(CMPW|CMP|BHS|BLO)`
+	if a < 0 || b < 0 || c < 0 || d < 0 {
+		return 1
+	}
+	return 0
+}
+
+func UintGeqZero(a uint8, b uint16, c uint32, d uint64) int {
+	// amd64: -`(TESTB|TESTW|TESTL|TESTQ|JCS|JCC)`
+	// arm64: -`(CMPW|CMP|BLO|BHS)`
+	if a >= 0 || b >= 0 || c >= 0 || d >= 0 {
+		return 1
+	}
+	return 0
+}
+
+func UintGtZero(a uint8, b uint16, c uint32, d uint64) int {
+	// arm64: `(CBN?ZW)`, `(CBN?Z[^W])`, -`(CMPW|CMP|BLS|BHI)`
+	if a > 0 || b > 0 || c > 0 || d > 0 {
+		return 1
+	}
+	return 0
+}
+
+func UintLeqZero(a uint8, b uint16, c uint32, d uint64) int {
+	// arm64: `(CBN?ZW)`, `(CBN?Z[^W])`, -`(CMPW|CMP|BHI|BLS)`
+	if a <= 0 || b <= 0 || c <= 0 || d <= 0 {
+		return 1
+	}
+	return 0
+}
+
+func UintLtOne(a uint8, b uint16, c uint32, d uint64) int {
+	// arm64: `(CBN?ZW)`, `(CBN?Z[^W])`, -`(CMPW|CMP|BHS|BLO)`
+	if a < 1 || b < 1 || c < 1 || d < 1 {
+		return 1
+	}
+	return 0
+}
+
+func UintGeqOne(a uint8, b uint16, c uint32, d uint64) int {
+	// arm64: `(CBN?ZW)`, `(CBN?Z[^W])`, -`(CMPW|CMP|BLO|BHS)`
+	if a >= 1 || b >= 1 || c >= 1 || d >= 1 {
+		return 1
+	}
+	return 0
+}
+
+func CmpToZeroU_ex1(a uint8, b uint16, c uint32, d uint64) int {
+	// wasm:"I64Eqz"-"I64LtU"
+	if 0 < a {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LtU"
+	if 0 < b {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LtU"
+	if 0 < c {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LtU"
+	if 0 < d {
+		return 1
+	}
+	return 0
+}
+
+func CmpToZeroU_ex2(a uint8, b uint16, c uint32, d uint64) int {
+	// wasm:"I64Eqz"-"I64LeU"
+	if a <= 0 {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LeU"
+	if b <= 0 {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LeU"
+	if c <= 0 {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LeU"
+	if d <= 0 {
+		return 1
+	}
+	return 0
+}
+
+func CmpToOneU_ex1(a uint8, b uint16, c uint32, d uint64) int {
+	// wasm:"I64Eqz"-"I64LtU"
+	if a < 1 {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LtU"
+	if b < 1 {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LtU"
+	if c < 1 {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LtU"
+	if d < 1 {
+		return 1
+	}
+	return 0
+}
+
+func CmpToOneU_ex2(a uint8, b uint16, c uint32, d uint64) int {
+	// wasm:"I64Eqz"-"I64LeU"
+	if 1 <= a {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LeU"
+	if 1 <= b {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LeU"
+	if 1 <= c {
+		return 1
+	}
+	// wasm:"I64Eqz"-"I64LeU"
+	if 1 <= d {
+		return 1
 	}
 	return 0
 }
